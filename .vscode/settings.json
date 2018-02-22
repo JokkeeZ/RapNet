@@ -1,0 +1,14 @@
+{
+    // Tabs
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.trimAutoWhitespace": true,
+    
+    // Ignore files & folders on project view
+    "files.exclude": {
+        "**/bin": true,
+        "**/obj": true,
+        "**/.gitattributes": true,
+        "**/.gitignore": true
+    },
+}
