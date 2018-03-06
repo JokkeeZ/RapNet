@@ -143,8 +143,8 @@ namespace RapNet.IO
         /// <summary>
         /// Checks if binarized config file is using Operation Flashpoint format.
         /// </summary>
-        /// <returns>Returns if config file is using Operation Flashpoint format; otherwise false.</returns>
-        public bool CheckOFP()
+        /// <returns>Returns true, if config file is using Operation Flashpoint format; otherwise false.</returns>
+        public bool IsOperationFlashpointFormat()
         {
             var pos = _reader.BaseStream.Position;
 

@@ -43,7 +43,7 @@ namespace RapNet.Parsers
                 return null;
             }
 
-            if (_reader.CheckOFP()) {
+            if (_reader.IsOperationFlashpointFormat()) {
                 Console.WriteLine("OFP format is not supported.");
                 return null;
             }

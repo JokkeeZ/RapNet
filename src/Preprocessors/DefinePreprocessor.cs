@@ -36,19 +36,6 @@ namespace RapNet.Preprocessors
             new RapDefinePreprocessor("WeaponSmallItems", 131072)
         };
 
-        private static readonly List<RapDefinePreprocessor> _canSee =
-            new List<RapDefinePreprocessor>
-        {
-            new RapDefinePreprocessor("CanSeeRadar", 1),
-            new RapDefinePreprocessor("CanSeeEye", 2),
-            new RapDefinePreprocessor("CanSeeOptics", 4),
-            new RapDefinePreprocessor("CanSeeEar", 8),
-            new RapDefinePreprocessor("CanSeeCompass", 16),
-            new RapDefinePreprocessor("CanSeeAll", 31),
-            new RapDefinePreprocessor("CanSeePeripheral", 32),
-            new RapDefinePreprocessor("CanSeeRadarC", 17)
-        };
-
         private static readonly Dictionary<string, List<RapDefinePreprocessor>> _defines =
             new Dictionary<string, List<RapDefinePreprocessor>>
         {
@@ -130,6 +117,19 @@ namespace RapNet.Preprocessors
                     new RapDefinePreprocessor("BrakeDistanceTank", 14),
                     new RapDefinePreprocessor("BrakeDistanceBoat", 50),
                     new RapDefinePreprocessor("BrakeDistancePlane", 500)
+                }
+            },
+
+            {
+                "canSee", new List<RapDefinePreprocessor> {
+                    new RapDefinePreprocessor("CanSeeRadar", 1),
+                    new RapDefinePreprocessor("CanSeeEye", 2),
+                    new RapDefinePreprocessor("CanSeeOptics", 4),
+                    new RapDefinePreprocessor("CanSeeEar", 8),
+                    new RapDefinePreprocessor("CanSeeCompass", 16),
+                    new RapDefinePreprocessor("CanSeeAll", 31),
+                    new RapDefinePreprocessor("CanSeePeripheral", 32),
+                    new RapDefinePreprocessor("CanSeeRadarC", 17)
                 }
             },
 

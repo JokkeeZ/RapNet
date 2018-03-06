@@ -34,7 +34,6 @@ namespace RapNet
                 return new RapDelete();
             }
 
-
             return null;
         }
     }

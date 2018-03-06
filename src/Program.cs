@@ -53,7 +53,7 @@ namespace RapNet
             Console.WriteLine("\t-e Extracts classes in to own header files.");
 
             Console.WriteLine("Example:");
-            Console.WriteLine("\tdotnet rapnet.dll -d -s C:/files/config.bin");
+            Console.WriteLine("\tdotnet rapnet.dll -d -s C:/path/to/config.bin");
         }
 
         static void Start(string filePath)
@@ -62,7 +62,7 @@ namespace RapNet
 
                 var config = parser.ParseConfig(filePath);
                 if (config != null) {
-                    SaveParsedFile(config, filePath);
+                    CreateConfigFile(config, filePath);
 
                     var filename = Path.GetFileName(filePath);
                     var configFile = filename.Replace(Path.GetExtension(filename), ".cpp");
@@ -72,7 +72,7 @@ namespace RapNet
             }
         }
 
-        static void SaveParsedFile(Config config, string filePath)
+        static void CreateConfigFile(Config config, string filePath)
         {
             using (var configCreator = new ConfigCreator(config, filePath)) {
                 configCreator.CreateFile();

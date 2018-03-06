@@ -21,7 +21,7 @@ namespace RapNet.Enums
         Long = 2,
 
         /// <summary>
-        /// Type ID: 3, Value: <see cref="EntryTypes.RapArray"/>. (not used)
+        /// Type ID: 3, Value: RapArray. (not used)
         /// </summary>
         Array = 3,
 

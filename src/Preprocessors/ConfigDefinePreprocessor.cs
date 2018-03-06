@@ -8,7 +8,7 @@ namespace RapNet.Preprocessors
     /// </summary>
     public class ConfigDefinePreprocessors
     {
-        private static List<RapDefinePreprocessor> _defines = new List<RapDefinePreprocessor>();
+        private static readonly List<RapDefinePreprocessor> _defines = new List<RapDefinePreprocessor>();
 
         /// <summary>
         /// Adds defines to the start of the config.
