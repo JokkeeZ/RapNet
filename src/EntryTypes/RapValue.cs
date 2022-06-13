@@ -51,29 +51,37 @@ namespace RapNet.EntryTypes
             };
 
             IRapEntry value = null;
-            if (rapValue.SubType == RapValueType.String) {
-                value = reader.ReadRapString();
-            } else if ( rapValue.SubType == RapValueType.Variable) {
-                value = reader.ReadRapVariable();
-            } else if (rapValue.SubType == RapValueType.Float) {
-                value = reader.ReadRapFloat();
-            } else if (rapValue.SubType == RapValueType.Long) {
-                value = reader.ReadRapInt();
-                //TODO: Completely rework "preprocessor" system as I seem to have broke it
-                // if (Program.GetAppSettings().IncludePreprocessors) {
+
+            switch (rapValue.SubType) {
+                case RapValueType.String:
+                    value = reader.ReadRapString();
+                    break;
+                case RapValueType.Variable:
+                    value = reader.ReadRapVariable();
+                    break;
+                case RapValueType.Float:
+                    value = reader.ReadRapFloat();
+                    break;
+                case RapValueType.Long:
+                    value = reader.ReadRapInt();
+                    //TODO: Completely rework "preprocessor" system as I seem to have broke it
+                    // if (Program.GetAppSettings().IncludePreprocessors) {
 
                     // var defines = DefinePreprocessors.GetDefinesForRapValue(rapValue.Name);
                     // if (defines.Count != 0) {
 
-                        // var define = defines.Find(x => x.Value == (RapIntegerValue)value.);
-                        // if (define != null) {
-                            // value = define.Name;
-                            // ConfigDefinePreprocessors.AddDefines(defines);
-                        // }
+                    // var define = defines.Find(x => x.Value == (RapIntegerValue)value.);
+                    // if (define != null) {
+                    // value = define.Name;
+                    // ConfigDefinePreprocessors.AddDefines(defines);
                     // }
-                // }
-            } else if (rapValue.SubType == RapValueType.Array) {
-                value = reader.ReadRapArray();
+                    // }
+                    // }
+                    break;
+                case RapValueType.Array:
+                    value = reader.ReadRapArray();
+                    break;
+                    
             }
             rapValue.Value = value;
             return rapValue;

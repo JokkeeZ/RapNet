@@ -1,3 +1,4 @@
+using System.Text;
 using RapNet.IO;
 
 namespace RapNet.EntryTypes
@@ -27,7 +28,7 @@ namespace RapNet.EntryTypes
         /// Converts object to human-readable config format.
         /// </summary>
         /// <returns>Returns object as human-readable config format.</returns>
-        public string ToConfigFormat() => $"delete /*class*/ { Name };";
+        public string ToConfigFormat() => new StringBuilder("delete /*class*/ ").Append(Name).Append(';').ToString();
     }
 }
 

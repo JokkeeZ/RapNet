@@ -1,3 +1,4 @@
+using System.Text;
 using RapNet.IO;
 
 namespace RapNet.EntryTypes
@@ -27,6 +28,6 @@ namespace RapNet.EntryTypes
         /// Converts object to human-readable config format.
         /// </summary>
         /// <returns>Returns object as human-readable config format.</returns>
-        public string ToConfigFormat() => $"/*extern*/ class { Name };";
+        public string ToConfigFormat() => new StringBuilder("/*external*/ class ").Append(Name).Append(';').ToString();
     }
 }

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Text;
 using RapNet.Enums;
 using RapNet.IO;
 
@@ -68,21 +70,24 @@ namespace RapNet.EntryTypes
         /// <param name="reader">Reader for reading binarized rap entry.</param>
         public void AddEntry(IRapEntry entry, RapBinaryReader reader)
         {
-            if (entry is RapClass){
-                Classes.Add(reader.ReadBinarizedRapEntry<RapClass>());
-            }
-
-            if (entry is RapExtern){
-                Externs.Add(reader.ReadBinarizedRapEntry<RapExtern>());
-            }
-
-            if (entry is RapDelete){
-                Deletes.Add(reader.ReadBinarizedRapEntry<RapDelete>());
-            }
-            
-            if (entry is RapValue val){
-                if (val.SubType == RapValueType.Array) Values.Add(reader.ReadBinarizedRapEntry<RapValue>(true)); 
-                else Values.Add(reader.ReadBinarizedRapEntry<RapValue>());
+            switch (entry) {
+                case RapClass:
+                    Classes.Add(reader.ReadBinarizedRapEntry<RapClass>());
+                    break;
+                case RapExtern:
+                    Externs.Add(reader.ReadBinarizedRapEntry<RapExtern>());
+                    break;
+                case RapDelete:
+                    Deletes.Add(reader.ReadBinarizedRapEntry<RapDelete>());
+                    break;
+                case RapValue val:
+                    if (val.SubType == RapValueType.Array) {
+                        Values.Add(reader.ReadBinarizedRapEntry<RapValue>(true));
+                        break;
+                    } 
+                    Values.Add(reader.ReadBinarizedRapEntry<RapValue>());
+                    break;
+                default: throw new Exception("How did we get here?");
             }
             
         }
@@ -91,16 +96,13 @@ namespace RapNet.EntryTypes
         /// Converts object to human-readable config format.
         /// </summary>
         /// <returns>Returns object as human-readable config format.</returns>
-        public string ToConfigFormat()
-        {
-            var value = $"class { Name }";
+        public string ToConfigFormat() {
+            var builder = new StringBuilder("class ").Append(Name);
             if (InheritedClassname.Length == 0) {
-                return value += " {";
+                return builder.Append(" {").ToString();
             }
 
-            value += $" : { InheritedClassname } ";
-            value += '{';
-            return value;
+            return builder.Append(" : ").Append(InheritedClassname).Append(" {").ToString();
         }
     }
 }
