@@ -1,14 +1,17 @@
+using System;
+using System.Text;
 using RapNet.Enums;
 using RapNet.IO;
 using RapNet.Preprocessors;
+using RapNet.ValueTypes;
 
 namespace RapNet.EntryTypes
 {
     /// <summary>
     /// Represents raP entry 'value'.
     /// </summary>
-    public class RapValue : IBinarizedRapEntry
-    {
+    public class RapValue : IBinarizedRapEntry {
+        
         /// <summary>
         /// Tells which type of value this raP entry holds.
         /// </summary>
@@ -20,9 +23,11 @@ namespace RapNet.EntryTypes
         public string Name { get; set; }
 
         /// <summary>
-        /// raP entry value as string.
+        /// raP entry value
         /// </summary>
-        public string Value { get; set; }
+        public IRapEntry? Value { get; set; }
+        
+
 
         /// <summary>
         /// Converts raP entry in to a <see cref="IRapEntry"/> object.
@@ -32,37 +37,45 @@ namespace RapNet.EntryTypes
         /// <returns>Returns a <see cref="IRapEntry"/> object.</returns>
         public IRapEntry FromBinary(RapBinaryReader reader, bool parent = false)
         {
+            if (parent || SubType == RapValueType.Array) {
+                return new RapValue() {
+                    SubType = RapValueType.Array,
+                    Name = reader.ReadAsciiz(),
+                    Value = reader.ReadRapArray()
+                };
+            }
+            
             var rapValue = new RapValue {
                 SubType = (RapValueType)reader.ReadByte(),
-                Name = reader.ReadAsciiz(),
+                Name = reader.ReadAsciiz()
             };
 
-            object value = null;
-            if (rapValue.SubType == RapValueType.String 
-                || rapValue.SubType == RapValueType.Variable) {
-                value = reader.ReadAsciiz();
+            IRapEntry value = null;
+            if (rapValue.SubType == RapValueType.String) {
+                value = reader.ReadRapString();
+            } else if ( rapValue.SubType == RapValueType.Variable) {
+                value = reader.ReadRapVariable();
+            } else if (rapValue.SubType == RapValueType.Float) {
+                value = reader.ReadRapFloat();
+            } else if (rapValue.SubType == RapValueType.Long) {
+                value = reader.ReadRapInt();
+                //TODO: Completely rework "preprocessor" system as I seem to have broke it
+                // if (Program.GetAppSettings().IncludePreprocessors) {
+
+                    // var defines = DefinePreprocessors.GetDefinesForRapValue(rapValue.Name);
+                    // if (defines.Count != 0) {
+
+                        // var define = defines.Find(x => x.Value == (RapIntegerValue)value.);
+                        // if (define != null) {
+                            // value = define.Name;
+                            // ConfigDefinePreprocessors.AddDefines(defines);
+                        // }
+                    // }
+                // }
+            } else if (rapValue.SubType == RapValueType.Array) {
+                value = reader.ReadRapArray();
             }
-            else if (rapValue.SubType == RapValueType.Float) {
-                value = reader.ReadFloat();
-            }
-            else if (rapValue.SubType == RapValueType.Long) {
-                value = reader.ReadInt();
-
-                if (Program.GetAppSettings().IncludePreprocessors) {
-
-                    var defines = DefinePreprocessors.GetDefinesForRapValue(rapValue.Name);
-                    if (defines.Count != 0) {
-
-                        var define = defines.Find(x => x.Value == (int)value);
-                        if (define != null) {
-                            value = define.Name;
-                            ConfigDefinePreprocessors.AddDefines(defines);
-                        }
-                    }
-                }
-            }
-
-            rapValue.Value = value.ToString();
+            rapValue.Value = value;
             return rapValue;
         }
 
@@ -70,17 +83,10 @@ namespace RapNet.EntryTypes
         /// Converts object to human-readable config format.
         /// </summary>
         /// <returns>Returns object as human-readable config format.</returns>
-        public string ToConfigFormat()
-        {
-            var val = Value;
-            if (SubType == RapValueType.String) {
-                val = $"\"{ Value }\"";
-            }
-            else if (SubType == RapValueType.Float) {
-                val = val.Replace(',', '.');
-            }
-
-            return $"{ Name } = { val };";
+        public string ToConfigFormat() {
+            var builder = new StringBuilder(Name);
+            if (SubType == RapValueType.Array) builder.Append("[]");
+            return builder.Append(" = ").Append(Value.ToConfigFormat()).Append(';').ToString();
         }
     }
 }

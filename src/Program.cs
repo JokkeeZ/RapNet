@@ -10,8 +10,7 @@ namespace RapNet
     {
         static AppSettings _settings;
 
-        static void Main(string[] args)
-        {
+        static void Main(string[] args) {
             Console.Title = "RapNet v0.0.1";
 
             Console.WriteLine();
@@ -60,7 +59,7 @@ namespace RapNet
         {
             using (var parser = new RapBinaryParser(filePath)) {
 
-                var config = parser.ParseConfig(filePath);
+                var config = parser.ParseConfig();
                 if (config != null) {
                     CreateConfigFile(config, filePath);
 

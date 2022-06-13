@@ -32,9 +32,8 @@ namespace RapNet.Parsers
         /// <summary>
         /// Creates a new instance of the Config object, with file contents decoded.
         /// </summary>
-        /// <param name="filePath">File path</param>
         /// <returns>Returns a new instance of the Config object, with file contents decoded.</returns>
-        public Config ParseConfig(string filePath)
+        public Config ParseConfig()
         {
             var config = new Config();
 

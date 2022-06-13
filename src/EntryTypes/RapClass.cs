@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-
+using RapNet.Enums;
 using RapNet.IO;
 
 namespace RapNet.EntryTypes
@@ -35,15 +35,10 @@ namespace RapNet.EntryTypes
         public List<RapClass> Classes { get; set; } = new List<RapClass>();
 
         /// <summary>
-        /// Value entries.
+        /// Value & Array entries.
         /// </summary>
         public List<RapValue> Values { get; set; } = new List<RapValue>();
-
-        /// <summary>
-        /// Array entries.
-        /// </summary>
-        public List<RapArray> Arrays { get; set; } = new List<RapArray>();
-
+        
         /// <summary>
         /// Extern class entries.
         /// </summary>
@@ -84,14 +79,12 @@ namespace RapNet.EntryTypes
             if (entry is RapDelete){
                 Deletes.Add(reader.ReadBinarizedRapEntry<RapDelete>());
             }
-
-            if (entry is RapValue){
-                Values.Add(reader.ReadBinarizedRapEntry<RapValue>());
+            
+            if (entry is RapValue val){
+                if (val.SubType == RapValueType.Array) Values.Add(reader.ReadBinarizedRapEntry<RapValue>(true)); 
+                else Values.Add(reader.ReadBinarizedRapEntry<RapValue>());
             }
-
-            if (entry is RapArray){
-                Arrays.Add(reader.ReadBinarizedRapEntry<RapArray>());
-            }
+            
         }
 
         /// <summary>

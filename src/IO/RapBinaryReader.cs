@@ -4,6 +4,8 @@ using System.IO;
 using System.Text;
 
 using RapNet.EntryTypes;
+using RapNet.Enums;
+using RapNet.ValueTypes;
 
 namespace RapNet.IO
 {
@@ -45,6 +47,47 @@ namespace RapNet.IO
             return Encoding.ASCII.GetString(bytes.ToArray());
         }
 
+        public RapStringValue ReadRapString() => new(ReadAsciiz());
+        public RapVariableValue ReadRapVariable() => new(ReadAsciiz());
+        public RapIntegerValue ReadRapInt() => new(ReadInt());
+        public RapIntegerValue ReadRapUInt() => new(ReadUint());
+        public RapFloatValue ReadRapFloat() => new(ReadFloat());
+
+        /// <summary>
+        /// Reads next available RapArray on stream.
+        /// </summary>
+        /// <param name="parent">Defines if array is child/parent array.</param>
+        /// <returns>Returns next available RapArray on stream.</returns>
+        public RapArrayValue ReadRapArray() {
+            var output = new RapArrayValue() {
+                EntryCount = ReadCompressedInteger()
+            };
+            if (output.EntryCount == 0) return output;
+
+            for (var i = 0; i < output.EntryCount; ++i) {
+                switch ((RapValueType)ReadByte()) {
+                    case RapValueType.String:
+                        output.Value.Add(ReadRapString());
+                        break;
+                    case RapValueType.Float:
+                        output.Value.Add(ReadRapFloat());
+                        break;
+                    case RapValueType.Long:
+                        output.Value.Add(ReadRapUInt());
+                        break;
+                    case RapValueType.Array:
+                        output.Value.Add(ReadRapArray());
+                        break;
+                    case RapValueType.Variable:
+                        output.Value.Add(ReadRapVariable());
+                        break;
+                    default: throw new Exception("How the fuck did you get here?");
+                }
+            }
+
+            return output;
+        }
+        
         /// <summary>
         /// Reads compressed integer.
         /// <para>https://community.bistudio.com/wiki/raP_File_Format_-_OFP#CompressedInteger</para>
@@ -77,26 +120,6 @@ namespace RapNet.IO
         {
             var bits = _reader.ReadBytes(4);
             return bits[0] == '\0' && bits[1] == 'r' && bits[2] == 'a' && bits[3] == 'P';
-        }
-
-        /// <summary>
-        /// Reads next available RapArray on stream.
-        /// </summary>
-        /// <param name="parent">Defines if array is child/parent array.</param>
-        /// <returns>Returns next available RapArray on stream.</returns>
-        public RapArray ReadRapArray(bool parent = false)
-        {
-            var array = new RapArray();
-
-            if (!parent) {
-
-                // A recursive array recurses into further entries with no name attached.
-                // https://community.bistudio.com/wiki/raP_File_Format_-_Elite#ArrayElements
-                array.Name = ReadAsciiz();
-            }
-
-            array.Entries = ReadCompressedInteger();
-            return array;
         }
 
         /// <summary>
@@ -134,10 +157,10 @@ namespace RapNet.IO
         /// </summary>
         /// <typeparam name="TRapEntry">Object with type IBinarizedRapEntry.</typeparam>
         /// <returns>Returns next TRapEntry available on stream.</returns>
-        public TRapEntry ReadBinarizedRapEntry<TRapEntry>() where TRapEntry : class, IBinarizedRapEntry, new()
+        public TRapEntry ReadBinarizedRapEntry<TRapEntry>(bool arr = false) where TRapEntry : class, IBinarizedRapEntry, new()
         {
             var tRapEntry = new TRapEntry();
-            return (TRapEntry)tRapEntry.FromBinary(this);
+            return (TRapEntry)tRapEntry.FromBinary(this, arr);
         }
 
         /// <summary>

@@ -150,7 +150,6 @@ namespace RapNet
             child.Externs.ForEach(o => writer.WriteLine(Padding + o.ToConfigFormat()));
 
             child.Values.ForEach(o => writer.WriteLine(Padding + o.ToConfigFormat()));
-            child.Arrays.ForEach(o => writer.WriteLine(Padding + o.ToConfigFormat()));
 
             for (var i = 0; i < child.Classes.Count; ++i) {
                 var endWithNewLine = i != (child.Classes.Count - 1);

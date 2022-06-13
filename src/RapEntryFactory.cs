@@ -25,7 +25,7 @@ namespace RapNet
                 return new RapValue();
 
                 case RapEntryType.RapArray:
-                return new RapArray();
+                return new RapValue() { SubType = RapValueType.Array };
 
                 case RapEntryType.RapExternClass:
                 return new RapExtern();
