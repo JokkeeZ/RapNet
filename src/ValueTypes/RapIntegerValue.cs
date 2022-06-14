@@ -1,7 +1,7 @@
-﻿namespace RapNet.ValueTypes; 
+﻿namespace RapNet.ValueTypes;
 
-public class RapIntegerValue : BaseRapValue<uint> {
-    public RapIntegerValue(uint val) => Value = val;
-    public RapIntegerValue(int val) => Value = unchecked((uint) val);
+internal sealed class RapIntegerValue : BaseRapValue<uint> {
+    internal RapIntegerValue(uint val) => Value = val;
+    internal RapIntegerValue(int val) => Value = unchecked((uint) val);
     public override string ToConfigFormat() => Value.ToString();
 }

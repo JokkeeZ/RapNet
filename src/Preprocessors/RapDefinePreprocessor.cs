@@ -1,37 +1,36 @@
+using System.Text;
 using RapNet.EntryTypes;
 
-namespace RapNet.Preprocessors
+namespace RapNet.Preprocessors;
+/// <summary>
+/// Represents a config preprocessor define. (#define [name] [value])
+/// </summary>
+public sealed class RapDefinePreprocessor : IRapEntry
 {
     /// <summary>
-    /// Represents a config preprocessor define. (#define [name] [value])
+    /// Preprocessor name.
     /// </summary>
-    public class RapDefinePreprocessor : IRapEntry
+    private string Name { get; set; }
+
+    /// <summary>
+    /// Preprocessor value.
+    /// </summary>
+    private int Value { get; set; }
+
+    /// <summary>
+    /// Initializes a new instance of the RapDefinePreprocessor class, with name and value.
+    /// </summary>
+    /// <param name="name">Preprocessor name.</param>
+    /// <param name="value">Preprocessor value.</param>
+    internal RapDefinePreprocessor(string name, int value)
     {
-        /// <summary>
-        /// Preprocessor name.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Preprocessor value.
-        /// </summary>
-        public int Value { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the RapDefinePreprocessor class, with name and value.
-        /// </summary>
-        /// <param name="name">Preprocessor name.</param>
-        /// <param name="value">Preprocessor value.</param>
-        public RapDefinePreprocessor(string name, int value)
-        {
-            Name = name;
-            Value = value;
-        }
-
-        /// <summary>
-        /// Converts object to final config format.
-        /// </summary>
-        /// <returns>Returns object as final config format.</returns>
-        public string ToConfigFormat() => $"#define { Name }  { Value }";
+        Name = name;
+        Value = value;
     }
+
+    /// <summary>
+    /// Converts object to final config format.
+    /// </summary>
+    /// <returns>Returns object as final config format.</returns>
+    public string ToConfigFormat() => new StringBuilder("#define ").Append(Name).Append(' ').Append(Value).ToString();
 }

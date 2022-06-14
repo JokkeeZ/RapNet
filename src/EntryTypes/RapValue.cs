@@ -2,99 +2,73 @@ using System;
 using System.Text;
 using RapNet.Enums;
 using RapNet.IO;
-using RapNet.Preprocessors;
-using RapNet.ValueTypes;
 
-namespace RapNet.EntryTypes
+namespace RapNet.EntryTypes;
+/// <summary>
+/// Represents raP entry 'value'.
+/// </summary>
+internal sealed class RapValue : IBinarizedRapEntry 
 {
     /// <summary>
-    /// Represents raP entry 'value'.
+    /// Tells which type of value this raP entry holds.
     /// </summary>
-    public class RapValue : IBinarizedRapEntry {
-        
-        /// <summary>
-        /// Tells which type of value this raP entry holds.
-        /// </summary>
-        public RapValueType SubType { get; set; }
+    internal RapValueType SubType { get; set; }
 
-        /// <summary>
-        /// raP entry name.
-        /// </summary>
-        public string Name { get; set; }
+    /// <summary>
+    /// raP entry name.
+    /// </summary>
+    private string? Name { get; set; }
 
-        /// <summary>
-        /// raP entry value
-        /// </summary>
-        public IRapEntry? Value { get; set; }
-        
+    /// <summary>
+    /// raP entry value
+    /// </summary>
+    private IRapEntry? Value { get; set; }
 
 
-        /// <summary>
-        /// Converts raP entry in to a <see cref="IRapEntry"/> object.
-        /// </summary>
-        /// <param name="reader">Reader used for reading entry.</param>
-        /// <param name="parent">Used for reading arrays recursive.</param>
-        /// <returns>Returns a <see cref="IRapEntry"/> object.</returns>
-        public IRapEntry FromBinary(RapBinaryReader reader, bool parent = false)
-        {
-            if (parent || SubType == RapValueType.Array) {
-                return new RapValue() {
-                    SubType = RapValueType.Array,
-                    Name = reader.ReadAsciiz(),
-                    Value = reader.ReadRapArray()
-                };
-            }
-            
-            var rapValue = new RapValue {
-                SubType = (RapValueType)reader.ReadByte(),
-                Name = reader.ReadAsciiz()
+    /// <summary>
+    /// Converts raP entry in to a <see cref="IRapEntry"/> object.
+    /// </summary>
+    /// <param name="reader">Reader used for reading entry.</param>
+    /// <param name="parent">Used for reading arrays recursive.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <returns>Returns a <see cref="IRapEntry"/> object.</returns>
+    public IRapEntry FromBinary(RapBinaryReader reader, bool parent = false) 
+    {
+        if (parent || SubType == RapValueType.Array) {
+            return new RapValue() {
+                SubType = RapValueType.Array,
+                Name = reader.ReadAsciiZ(),
+                Value = reader.ReadRapArray()
             };
-
-            IRapEntry value = null;
-
-            switch (rapValue.SubType) {
-                case RapValueType.String:
-                    value = reader.ReadRapString();
-                    break;
-                case RapValueType.Variable:
-                    value = reader.ReadRapVariable();
-                    break;
-                case RapValueType.Float:
-                    value = reader.ReadRapFloat();
-                    break;
-                case RapValueType.Long:
-                    value = reader.ReadRapInt();
-                    //TODO: Completely rework "preprocessor" system as I seem to have broke it
-                    // if (Program.GetAppSettings().IncludePreprocessors) {
-
-                    // var defines = DefinePreprocessors.GetDefinesForRapValue(rapValue.Name);
-                    // if (defines.Count != 0) {
-
-                    // var define = defines.Find(x => x.Value == (RapIntegerValue)value.);
-                    // if (define != null) {
-                    // value = define.Name;
-                    // ConfigDefinePreprocessors.AddDefines(defines);
-                    // }
-                    // }
-                    // }
-                    break;
-                case RapValueType.Array:
-                    value = reader.ReadRapArray();
-                    break;
-                    
-            }
-            rapValue.Value = value;
-            return rapValue;
         }
 
-        /// <summary>
-        /// Converts object to human-readable config format.
-        /// </summary>
-        /// <returns>Returns object as human-readable config format.</returns>
-        public string ToConfigFormat() {
-            var builder = new StringBuilder(Name);
-            if (SubType == RapValueType.Array) builder.Append("[]");
-            return builder.Append(" = ").Append(Value.ToConfigFormat()).Append(';').ToString();
-        }
+        var rapValue = new RapValue {
+            SubType = (RapValueType) reader.ReadByte(),
+            Name = reader.ReadAsciiZ()
+        };
+
+        IRapEntry value = rapValue.SubType switch {
+            RapValueType.String => reader.ReadRapString(),
+            RapValueType.Variable => reader.ReadRapVariable(),
+            RapValueType.Float => reader.ReadRapFloat(),
+            RapValueType.Long => reader.ReadRapInt(),
+            RapValueType.Array => reader.ReadRapArray(),
+            _ => throw new Exception("How did we get here?")
+        };
+
+        rapValue.Value = value;
+        return rapValue;
+    }
+
+    /// <summary>
+    /// Converts object to human-readable config format.
+    /// </summary>
+    /// <returns>Returns object as human-readable config format.</returns>
+    public string ToConfigFormat() 
+    { 
+        var builder = new StringBuilder(Name);
+        var value = Value ?? throw new NullReferenceException();
+        if (SubType == RapValueType.Array) builder.Append("[]");
+        return builder.Append(" = ").Append(value.ToConfigFormat()).Append(';').ToString();
     }
 }

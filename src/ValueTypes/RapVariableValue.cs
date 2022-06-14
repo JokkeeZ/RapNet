@@ -1,6 +1,8 @@
-﻿namespace RapNet.ValueTypes; 
+﻿using System;
 
-public class RapVariableValue : BaseRapValue<string> {
-    public RapVariableValue(string varName) => Value = varName;
-    public override string ToConfigFormat() => Value;
+namespace RapNet.ValueTypes;
+
+internal sealed class RapVariableValue : BaseRapValue<string> {
+    internal RapVariableValue(string varName) => Value = varName;
+    public override string ToConfigFormat() => Value ?? throw new NullReferenceException();
 }

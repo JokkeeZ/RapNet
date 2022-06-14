@@ -1,8 +1,8 @@
 ﻿using RapNet.EntryTypes;
 
-namespace RapNet.ValueTypes; 
+namespace RapNet.ValueTypes;
 
-public abstract class BaseRapValue<T> : IRapEntry {
-    public T Value { get; set; }
+internal abstract class BaseRapValue<T> : IRapEntry {
+    protected T? Value { get; init; }
     public abstract string ToConfigFormat();
 }

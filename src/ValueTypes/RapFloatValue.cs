@@ -1,6 +1,8 @@
-﻿namespace RapNet.ValueTypes; 
+﻿using System.Globalization;
 
-public class RapFloatValue : BaseRapValue<float> {
-    public RapFloatValue(float val) => Value = val;
-    public override string ToConfigFormat() => Value.ToString();
+namespace RapNet.ValueTypes;
+
+internal sealed class RapFloatValue : BaseRapValue<float> {
+    internal RapFloatValue(float val) => Value = val;
+    public override string ToConfigFormat() => Value.ToString(CultureInfo.CurrentCulture);
 }
