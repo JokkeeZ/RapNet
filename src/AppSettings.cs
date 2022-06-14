@@ -1,11 +1,10 @@
-namespace RapNet
-{
-    public class AppSettings
-    {
-        public bool IncludePreprocessors { get; set; }
+namespace RapNet;
 
-        public bool UseSpaces { get; set; }
-        
-        public bool ExtractHeaderFiles { get; set; }
-    }
+internal sealed class AppSettings
+{
+    internal bool IncludePreprocessors { get; init; }
+
+    internal bool UseSpaces { get; init; }
+
+    internal bool ExtractHeaderFiles { get; init; }
 }

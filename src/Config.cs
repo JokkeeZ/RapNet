@@ -2,26 +2,24 @@ using System.Collections.Generic;
 
 using RapNet.EntryTypes;
 
-namespace RapNet
+namespace RapNet;
+/// <summary>
+/// Represents a raPified file that is being readed.
+/// </summary>
+internal sealed class Config
 {
     /// <summary>
-    /// Represents a raPified file that is being readed.
+    /// RapClass entries count.
     /// </summary>
-    public class Config
-    {
-        /// <summary>
-        /// RapClass entries count.
-        /// </summary>
-        public int Entries { get; set; }
+    internal int Entries { get; set; }
 
-        /// <summary>
-        /// Classes inside this file.
-        /// </summary>
-        public List<RapClass> Classes { get; set; } = new List<RapClass>();
+    /// <summary>
+    /// Classes inside this file.
+    /// </summary>
+    internal List<RapClass> Classes { get; set; } = new();
 
-        /// <summary>
-        /// Enums inside this file.
-        /// </summary>
-        public List<RapEnum> Enums { get; set; } = new List<RapEnum>();
-    }
+    /// <summary>
+    /// Enums inside this file.
+    /// </summary>
+    internal List<RapEnum> Enums { get; set; } = new();
 }

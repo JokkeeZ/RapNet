@@ -6,148 +6,131 @@ using RapNet.EntryTypes;
 using RapNet.Enums;
 using RapNet.IO;
 
-namespace RapNet.Parsers
-{
+namespace RapNet.Parsers;
+
+/// <inheritdoc />
+/// <summary>
+/// Parses raPified binary files in to a Config instance.
+/// </summary>
+internal sealed class RapBinaryParser : IDisposable {
     /// <summary>
-    /// Parses raPified binary files in to a Config instance.
+    /// Offset to stream position where enums begin.
     /// </summary>
-    public class RapBinaryParser : IDisposable
+    private uint _enumOffset;
+
+    private readonly RapBinaryReader _reader;
+
+    /// <summary>
+    /// Initializes a new instance of the RapBinaryParser class, with raP binary file path.
+    /// </summary>
+    /// <param name="filePath">Rap binary file path</param>
+    public RapBinaryParser(string filePath) => _reader = new RapBinaryReader(File.ReadAllBytes(filePath));
+
+    /// <summary>
+    /// Creates a new instance of the Config object, with file contents decoded.
+    /// </summary>
+    /// <returns>Returns a new instance of the Config object, with file contents decoded.</returns>
+    public Config? ParseConfig() 
     {
-        /// <summary>
-        /// Offset to stream position where enums begin.
-        /// </summary>
-        private uint _enumOffset;
+        var config = new Config();
 
-        private readonly RapBinaryReader _reader;
-
-        /// <summary>
-        /// Initializes a new instance of the RapBinaryParser class, with raP binary file path.
-        /// </summary>
-        /// <param name="filePath">Rap binary file path</param>
-        public RapBinaryParser(string filePath)
-        {
-            _reader = new RapBinaryReader(File.ReadAllBytes(filePath));
+        if (!_reader.ReadHeader()) {
+            Console.WriteLine("Invalid header.");
+            return null;
         }
 
-        /// <summary>
-        /// Creates a new instance of the Config object, with file contents decoded.
-        /// </summary>
-        /// <param name="filePath">File path</param>
-        /// <returns>Returns a new instance of the Config object, with file contents decoded.</returns>
-        public Config ParseConfig(string filePath)
-        {
-            var config = new Config();
-
-            if (!_reader.ReadHeader()) {
-                Console.WriteLine("Invalid header.");
-                return null;
-            }
-
-            if (_reader.IsOperationFlashpointFormat()) {
-                Console.WriteLine("OFP format is not supported.");
-                return null;
-            }
-
-            var always0 = _reader.ReadUint();
-            var always8 = _reader.ReadUint();
-
-            if (always0 != 0 && always8 != 8) {
-                Console.WriteLine("Invalid const values.");
-                return null;
-            }
-
-            _enumOffset = _reader.ReadUint();
-
-            if (!ReadParentClasses(config)) {
-                Console.WriteLine("No parent class bodies.");
-                return null;
-            }
-
-            if (!ReadChildClasses(config)) {
-                Console.WriteLine("No child classes.");
-                return null;
-            }
-
-            config.Enums.AddRange(ReadEnums());
-            return config;
+        if (_reader.IsOperationFlashpointFormat()) {
+            Console.WriteLine("OFP format is not supported.");
+            return null;
         }
 
-        private List<RapEnum> ReadEnums()
-        {
-            _reader.SetPosition(_enumOffset);
+        var always0 = _reader.ReadUint();
+        var always8 = _reader.ReadUint();
 
-            var enumsCount = _reader.ReadInt();
-            if (enumsCount == 0) {
-                return new List<RapEnum>(0);
-            }
-
-            var enums = new List<RapEnum>();
-            for (var i = 0; i < enumsCount; ++i) {
-                enums.Add(_reader.ReadBinarizedRapEntry<RapEnum>());
-            }
-
-            return enums;
+        if (always0 != 0 && always8 != 8) {
+            Console.WriteLine("Invalid const values.");
+            return null;
         }
 
-        private bool ReadParentClasses(Config config)
-        {
-            _reader.ReadAsciiz();
-            config.Entries = _reader.ReadCompressedInteger();
+        _enumOffset = _reader.ReadUint();
 
-            for (var i = 0; i < config.Entries; ++i) {
-
-                // This byte defines entry type.
-                // Don't need it, since there is only one type of entries. (classes)
-                _reader.ReadByte();
-                config.Classes.Add(_reader.ReadBinarizedRapEntry<RapClass>());
-            }
-
-            return config.Classes.Count > 0;
+        if (!ReadParentClasses(config)) {
+            Console.WriteLine("No parent class bodies.");
+            return null;
         }
 
-        private bool ReadChildClasses(Config config)
-        {
-            config.Classes.ForEach(o => LoadChildrenClasses(o));
-            return config.Classes.Count > 0;
+        if (!ReadChildClasses(config)) {
+            Console.WriteLine("No child classes.");
+            return null;
         }
 
-        private void LoadChildrenClasses(RapClass child)
-        {
-            _reader.SetPosition(child.Offset);
+        config.Enums.AddRange(ReadEnums());
+        return config;
+    }
 
-            child.InheritedClassname = _reader.ReadAsciiz();
-            child.Entries = _reader.ReadCompressedInteger();
+    private IEnumerable<RapEnum> ReadEnums() 
+    {
+        _reader.SetPosition(_enumOffset);
 
-            // Just used for repeating X times to add all entries.
-            for (var i = 0; i < child.Entries; ++i) {
-                AddEntryToClass(child);
-            }
-
-            // Recursively load child class childs.
-            child.Classes.ForEach(o => LoadChildrenClasses(o));
+        var enumsCount = _reader.ReadInt();
+        if (enumsCount == 0) {
+            return new List<RapEnum>(0);
         }
 
-        private void AddEntryToClass(RapClass rapClass)
-        {
-            var entryType = (RapEntryType)_reader.ReadByte();
+        var enums = new List<RapEnum>();
+        for (var i = 0; i < enumsCount; ++i) enums.Add(_reader.ReadBinarizedRapEntry<RapEnum>());
 
-            var entry = RapEntryFactory.CreateEntryForType(entryType);
-            if (entry != null) {
-                rapClass.AddEntry(entry, _reader);
-            }
+        return enums;
+    }
+
+    private bool ReadParentClasses(Config config) 
+    {
+        _reader.ReadAsciiZ();
+        config.Entries = _reader.ReadCompressedInteger();
+
+        for (var i = 0; i < config.Entries; ++i) {
+            // This byte defines entry type.
+            // Don't need it, since there is only one type of entries. (classes)
+            _reader.ReadByte();
+            config.Classes.Add(_reader.ReadBinarizedRapEntry<RapClass>());
         }
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+        return config.Classes.Count > 0;
+    }
+
+    private bool ReadChildClasses(Config config) 
+    {
+        config.Classes.ForEach(LoadChildrenClasses);
+        return config.Classes.Count > 0;
+    }
+
+    private void LoadChildrenClasses(RapClass child) 
+    {
+        _reader.SetPosition(child.Offset);
+
+        child.InheritedClassname = _reader.ReadAsciiZ();
+        child.Entries = _reader.ReadCompressedInteger();
+
+        // Just used for repeating X times to add all entries.
+        for (var i = 0; i < child.Entries; ++i) {
+            AddEntryToClass(child);
         }
 
-        private void Dispose(bool disposing)
-        {
-            if (disposing && (_reader != null)) {
-                _reader.Dispose();
-            }
-        }
+        // Recursively load child class children.
+        child.Classes.ForEach(LoadChildrenClasses);
+    }
+
+    private void AddEntryToClass(RapClass rapClass) 
+    {
+        var entryType = (RapEntryType) _reader.ReadByte();
+
+        var entry = RapEntryFactory.CreateEntryForType(entryType);
+        rapClass.AddEntry(entry, _reader);
+    }
+
+    public void Dispose() 
+    {
+        _reader.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

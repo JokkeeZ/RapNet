@@ -1,14 +1,13 @@
-namespace RapNet.EntryTypes
+namespace RapNet.EntryTypes;
+
+/// <summary>
+/// Represents raP entry.
+/// </summary>
+internal interface IRapEntry
 {
     /// <summary>
-    /// Represents raP entry.
+    /// Converts object to human-readable config format.
     /// </summary>
-    public interface IRapEntry
-    {
-        /// <summary>
-        /// Converts object to human-readable config format.
-        /// </summary>
-        /// <returns>Returns object as human-readable config format.</returns>
-        string ToConfigFormat();
-    }
+    /// <returns>Returns object as human-readable config format.</returns>
+    string ToConfigFormat();
 }

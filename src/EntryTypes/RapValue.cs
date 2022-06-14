@@ -1,86 +1,74 @@
+using System;
+using System.Text;
 using RapNet.Enums;
 using RapNet.IO;
-using RapNet.Preprocessors;
 
-namespace RapNet.EntryTypes
+namespace RapNet.EntryTypes;
+/// <summary>
+/// Represents raP entry 'value'.
+/// </summary>
+internal sealed class RapValue : IBinarizedRapEntry 
 {
     /// <summary>
-    /// Represents raP entry 'value'.
+    /// Tells which type of value this raP entry holds.
     /// </summary>
-    public class RapValue : IBinarizedRapEntry
+    internal RapValueType SubType { get; set; }
+
+    /// <summary>
+    /// raP entry name.
+    /// </summary>
+    private string? Name { get; set; }
+
+    /// <summary>
+    /// raP entry value
+    /// </summary>
+    private IRapEntry? Value { get; set; }
+
+
+    /// <summary>
+    /// Converts raP entry in to a <see cref="IRapEntry"/> object.
+    /// </summary>
+    /// <param name="reader">Reader used for reading entry.</param>
+    /// <param name="parent">Used for reading arrays recursive.</param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <returns>Returns a <see cref="IRapEntry"/> object.</returns>
+    public IRapEntry FromBinary(RapBinaryReader reader, bool parent = false) 
     {
-        /// <summary>
-        /// Tells which type of value this raP entry holds.
-        /// </summary>
-        public RapValueType SubType { get; set; }
-
-        /// <summary>
-        /// raP entry name.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// raP entry value as string.
-        /// </summary>
-        public string Value { get; set; }
-
-        /// <summary>
-        /// Converts raP entry in to a <see cref="IRapEntry"/> object.
-        /// </summary>
-        /// <param name="reader">Reader used for reading entry.</param>
-        /// <param name="parent">Used for reading arrays recursive.</param>
-        /// <returns>Returns a <see cref="IRapEntry"/> object.</returns>
-        public IRapEntry FromBinary(RapBinaryReader reader, bool parent = false)
-        {
-            var rapValue = new RapValue {
-                SubType = (RapValueType)reader.ReadByte(),
-                Name = reader.ReadAsciiz(),
+        if (parent || SubType == RapValueType.Array) {
+            return new RapValue() {
+                SubType = RapValueType.Array,
+                Name = reader.ReadAsciiZ(),
+                Value = reader.ReadRapArray()
             };
-
-            object value = null;
-            if (rapValue.SubType == RapValueType.String 
-                || rapValue.SubType == RapValueType.Variable) {
-                value = reader.ReadAsciiz();
-            }
-            else if (rapValue.SubType == RapValueType.Float) {
-                value = reader.ReadFloat();
-            }
-            else if (rapValue.SubType == RapValueType.Long) {
-                value = reader.ReadInt();
-
-                if (Program.GetAppSettings().IncludePreprocessors) {
-
-                    var defines = DefinePreprocessors.GetDefinesForRapValue(rapValue.Name);
-                    if (defines.Count != 0) {
-
-                        var define = defines.Find(x => x.Value == (int)value);
-                        if (define != null) {
-                            value = define.Name;
-                            ConfigDefinePreprocessors.AddDefines(defines);
-                        }
-                    }
-                }
-            }
-
-            rapValue.Value = value.ToString();
-            return rapValue;
         }
 
-        /// <summary>
-        /// Converts object to human-readable config format.
-        /// </summary>
-        /// <returns>Returns object as human-readable config format.</returns>
-        public string ToConfigFormat()
-        {
-            var val = Value;
-            if (SubType == RapValueType.String) {
-                val = $"\"{ Value }\"";
-            }
-            else if (SubType == RapValueType.Float) {
-                val = val.Replace(',', '.');
-            }
+        var rapValue = new RapValue {
+            SubType = (RapValueType) reader.ReadByte(),
+            Name = reader.ReadAsciiZ()
+        };
 
-            return $"{ Name } = { val };";
-        }
+        IRapEntry value = rapValue.SubType switch {
+            RapValueType.String => reader.ReadRapString(),
+            RapValueType.Variable => reader.ReadRapVariable(),
+            RapValueType.Float => reader.ReadRapFloat(),
+            RapValueType.Long => reader.ReadRapInt(),
+            RapValueType.Array => reader.ReadRapArray(),
+            _ => throw new Exception("How did we get here?")
+        };
+
+        rapValue.Value = value;
+        return rapValue;
+    }
+
+    /// <summary>
+    /// Converts object to human-readable config format.
+    /// </summary>
+    /// <returns>Returns object as human-readable config format.</returns>
+    public string ToConfigFormat() 
+    { 
+        var builder = new StringBuilder(Name);
+        var value = Value ?? throw new NullReferenceException();
+        if (SubType == RapValueType.Array) builder.Append("[]");
+        return builder.Append(" = ").Append(value.ToConfigFormat()).Append(';').ToString();
     }
 }
